@@ -1,73 +1,54 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
+import firebase from "firebase";
+import { FIREBASE_CONFIG } from "../utils/Config";
 
 export default function ChatScreen() {
-  const [messages, setMessages] = useState([]);
+	const [messages, setMessages] = useState([]);
+	const firebaseConfig = FIREBASE_CONFIG;
+	if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+	const messagesRef = firebase.database().ref("/messages");
 
-  useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: "React Native",
-          avatar: "https://placeimg.com/140/140/any",
-        },
-      },
-    ]);
-  }, []);
+	useEffect(() => {
+		(async () => {
+			try {
+				const snapshot = await messagesRef
+					.limitToLast(20)
+					.once("value");
+				console.log("Snapshot: ", snapshot.val());
+				const newArr = [];
+				Object.keys(snapshot.val()).map((key, _index) => {
+					newArr.push(snapshot.val()[key]);
+				});
+				setMessages(newArr);
+				messagesRef.on("child_added", data => {
+				console.log("data add to db", data.key, data.val());
+				});
+			} catch (e) {
+				console.error(e);
+			}
+		})();
+	}, []);
+	useEffect(() => {
+		console.log("messages: ", messages);
+	}, [messages]);
+	const onSend = useCallback((messages = []) => {
+		console.log("new message: ", messages[0]);
+		const newMessage = messagesRef.push();
+		newMessage.set(messages[0]);
+		setMessages(previousMessages =>
+			GiftedChat.append(previousMessages, messages)
+		);
+	}, []);
 
-  const onSend = useCallback((messages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
-  }, []);
-
-  return (
-    <GiftedChat
-      messages={messages}
-      onSend={(messages) => onSend(messages)}
-      user={{
-        _id: 1,
-      }}
-    />
-  );
+	return (
+		<GiftedChat
+			messages={messages}
+			onSend={messages => onSend(messages)}
+			user={{
+				_id: 1
+			}}
+			inverted={false}
+		/>
+	);
 }
-// import React, { useEffect } from "react";
-// import { View, Text } from "react-native";
-// import firebase from "firebase";
-// const ChatScreen = (props) => {
-//   const { name } = props.route.params;
-//   useEffect(() => {
-//     var firebaseConfig = {
-//       apiKey: "AIzaSyDmMJqExNxZyjrLXOfcCWwCoUyEddtG4oI",
-//       authDomain: "chat-app-e45ee.firebaseapp.com",
-//       databaseURL: "https://chat-app-e45ee.firebaseio.com",
-//       projectId: "chat-app-e45ee",
-//       storageBucket: "chat-app-e45ee.appspot.com",
-//       messagingSenderId: "1039426524742",
-//       appId: "1:1039426524742:web:52aad1ee0d83790b575c47",
-//       measurementId: "G-T2DM9JDL2J",
-//     };
-//     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
-//     var database = firebase.database();
-//     return firebase
-//       .database()
-//       .ref("/messages")
-//       .once("value")
-//       .then(function (snapshot) {
-//         console.log(snapshot.val());
-//       });
-//   }, []);
-
-//   return (
-//     <View>
-//       <Text>{name}</Text>
-//     </View>
-//   );
-// };
-
-// export default ChatScreen;
