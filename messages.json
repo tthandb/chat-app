@@ -1,0 +1,31 @@
+{
+  "messages": [
+    {
+      "_id": 1,
+      "text": "Hello developer",
+      "user": {
+        "_id": 2,
+        "name": "Duong",
+        "avatar": "https://placeimg.com/140/140/any"
+      }
+    },
+    {
+      "_id": 2,
+      "text": "Hello",
+      "user": {
+        "_id": 1,
+        "name": "Binh",
+        "avatar": "https://placeimg.com/140/140/any"
+      }
+    },
+    {
+      "_id": 3,
+      "text": "developer",
+      "user": {
+        "_id": 3,
+        "name": "Giang",
+        "avatar": "https://placeimg.com/140/140/any"
+      }
+    }
+  ]
+}
